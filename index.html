@@ -165,10 +165,24 @@
 
         await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-        const img = document.createElement('img');
-        img.src = canvas.toDataURL('image/png');
-        img.alt = `Page ${pageNum}`;
-        pdfImagesDiv.appendChild(img);
+        const imgDataUrl = canvas.toDataURL('image/png');
+
+const img = document.createElement('img');
+img.src = imgDataUrl;
+img.alt = `Page ${pageNum}`;
+
+const downloadLink = document.createElement('a');
+downloadLink.href = imgDataUrl;
+downloadLink.download = `page-${pageNum}.png`;
+downloadLink.textContent = 'Download Image';
+downloadLink.style.display = 'block';
+downloadLink.style.marginBottom = '20px';
+downloadLink.style.color = '#4caf50';
+downloadLink.style.fontWeight = 'bold';
+downloadLink.style.textDecoration = 'none';
+
+pdfImagesDiv.appendChild(img);
+pdfImagesDiv.appendChild(downloadLink);
       }
     };
 
