@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>File Converter</title>
+<title>PKP + JRD - File Converter</title>
 <style>
   body {
     margin: 0; 
@@ -28,7 +28,7 @@
     padding: 20px;
     border-radius: 12px;
     max-width: 450px;
-    margin: 0 auto;
+    margin: 30px auto;
     box-shadow: 0 0 15px rgba(0,0,0,0.3);
   }
   input[type="file"] {
@@ -47,14 +47,21 @@
   button:hover {
     background: #45a049;
   }
+  #pdfImages img {
+    max-width: 100%;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
 </style>
 </head>
 <body>
 
-<h1></h1>
+<h1>Welcome to PKP + JRD</h1>
 <p>Your trusted file converter & tools hub</p>
 
-<div class="converter">
+<!-- JPG/PNG to PDF -->
+<div class="converter" id="jpgToPdf">
   <h2>🖼 JPG/PNG to PDF Converter</h2>
   <input type="file" id="imageFiles" accept="image/png, image/jpeg" multiple />
   <br />
@@ -62,8 +69,19 @@
   <div id="output"></div>
 </div>
 
+<!-- PDF to Images -->
+<div class="converter" id="pdfToImg">
+  <h2>📄 PDF to Images Converter</h2>
+  <input type="file" id="pdfFile" accept="application/pdf" />
+  <br />
+  <button onclick="convertPdfToImages()">Convert & Show Images</button>
+  <div id="pdfImages"></div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 <script>
+  // JPG/PNG to PDF converter (existing)
   async function convertToPDF() {
     const { jsPDF } = window.jspdf;
     const files = document.getElementById('imageFiles').files;
@@ -114,6 +132,47 @@
       reader.onload = () => resolve(reader.result);
       reader.onerror = error => reject(error);
     });
+  }
+
+  // PDF to Images converter (new)
+  async function convertPdfToImages() {
+    const fileInput = document.getElementById('pdfFile');
+    const pdfImagesDiv = document.getElementById('pdfImages');
+    pdfImagesDiv.innerHTML = '';
+
+    if (!fileInput.files.length) {
+      alert('Please select a PDF file.');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const fileReader = new FileReader();
+
+    fileReader.onload = async function() {
+      const typedarray = new Uint8Array(this.result);
+
+      const loadingTask = pdfjsLib.getDocument(typedarray);
+      const pdf = await loadingTask.promise;
+
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.alt = `Page ${pageNum}`;
+        pdfImagesDiv.appendChild(img);
+      }
+    };
+
+    fileReader.readAsArrayBuffer(file);
   }
 </script>
 
