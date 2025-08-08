@@ -1,25 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Welcome to My Site</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background: linear-gradient(to right, #6dd5ed, #2193b0);
-            color: white;
-        }
-        h1 {
-            font-size: 3em;
-        }
-        p {
-            font-size: 1.2em;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PKP + JRD - File Converter</title>
+<style>
+  body {
+    margin: 0; 
+    font-family: Arial, sans-serif; 
+    background: linear-gradient(135deg, #4caf50, #2196f3); 
+    color: white; 
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 3em;
+    margin-bottom: 0.2em;
+  }
+  p {
+    font-size: 1.3em;
+    opacity: 0.8;
+    margin-bottom: 1.5em;
+  }
+  .converter {
+    background: white;
+    color: #222;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 450px;
+    margin: 0 auto;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  input[type="file"] {
+    margin: 15px 0;
+    width: 100%;
+  }
+  button {
+    background: #4caf50;
+    color: white;
+    font-size: 1.1em;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #45a049;
+  }
+</style>
 </head>
 <body>
-    <h1>🚀 Coming Soon</h1>
-    <p>Your ultimate file converter & tools hub</p>
+
+<h1>Welcome to PKP + JRD</h1>
+<p>Your trusted file converter & tools hub</p>
+
+<div class="converter">
+  <h2>🖼 JPG/PNG to PDF Converter</h2>
+  <input type="file" id="imageFiles" accept="image/png, image/jpeg" multiple />
+  <br />
+  <button onclick="convertToPDF()">Convert & Download PDF</button>
+  <div id="output"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  async function convertToPDF() {
+    const { jsPDF } = window.jspdf;
+    const files = document.getElementById('imageFiles').files;
+    const output = document.getElementById('output');
+    output.textContent = '';
+    
+    if (!files.length) {
+      alert("Please select at least one image.");
+      return;
+    }
+
+    const pdf = new jsPDF();
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imgData = await toBase64(file);
+      const img = new Image();
+      img.src = imgData;
+      await new Promise(resolve => (img.onload = resolve));
+      
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = img.width;
+      const imgHeight = img.height;
+
+      // Calculate dimensions to keep aspect ratio and fit page
+      let width, height;
+      if (imgWidth > imgHeight) {
+        width = pageWidth;
+        height = (imgHeight * pageWidth) / imgWidth;
+      } else {
+        height = pageHeight;
+        width = (imgWidth * pageHeight) / imgHeight;
+      }
+
+      if (i > 0) pdf.addPage();
+
+      pdf.addImage(img, 'JPEG', 0, 0, width, height);
+    }
+
+    pdf.save('converted.pdf');
+  }
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+</script>
+
 </body>
 </html>
